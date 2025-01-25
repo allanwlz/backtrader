@@ -28,6 +28,7 @@ import itertools
 import math
 import operator
 import sys
+import os
 
 import matplotlib
 import numpy as np  # guaranteed by matplotlib
@@ -65,8 +66,11 @@ class PInfo(object):
         self.handles = collections.defaultdict(list)
         self.labels = collections.defaultdict(list)
         self.legpos = collections.defaultdict(int)
-
-        self.prop = mfontmgr.FontProperties(size=self.sch.subtxtsize)
+        self.font_path = '/home/jovyan/.cache/SimHei.ttf'
+        if os.path.exists(self.font_path):
+            self.prop = mfontmgr.FontProperties(fname=self.font_path, size=self.sch.subtxtsize)
+        else:
+            self.prop = mfontmgr.FontProperties(size=self.sch.subtxtsize)
 
     def newfig(self, figid, numfig, mpyplot):
         fig = mpyplot.figure(figid + numfig)
@@ -103,6 +107,7 @@ class Plot_OldSync(with_metaclass(MetaParams, object)):
         if not hasattr(self.p.scheme, 'locbg'):
             setattr(self.p.scheme, 'locbg', 'white')
             setattr(self.p.scheme, 'locbgother', 'white')
+        self.minticks=kwargs.get('minticks', 5)
 
     def drawtag(self, ax, x, y, facecolor, edgecolor, alpha=0.9, **kwargs):
 
@@ -262,7 +267,7 @@ class Plot_OldSync(with_metaclass(MetaParams, object)):
             # Applying the manual rotation with setp cures the problem
             # but the labels from all axis but the last have to be hidden
             for ax in laxis:
-                self.mpyplot.setp(ax.get_xticklabels(), visible=False)
+                self.mpyplot.setp(ax.get_xticklabels(), visible=True)
 
             self.mpyplot.setp(lastax.get_xticklabels(), visible=True,
                               rotation=self.pinf.sch.tickrotation)
@@ -305,13 +310,13 @@ class Plot_OldSync(with_metaclass(MetaParams, object)):
             dax.fmt_xdata = fordata
 
         # Major locator / formatter
-        locmajor = loc.AutoDateLocator(self.pinf.xreal)
+        locmajor = loc.AutoDateLocator(self.pinf.xreal, minticks=self.minticks)
         ax.xaxis.set_major_locator(locmajor)
         if self.pinf.sch.fmt_x_ticks is None:
             autofmt = loc.AutoDateFormatter(self.pinf.xreal, locmajor)
         else:
             autofmt = MyDateFormatter(self.pinf.xreal,
-                                      fmt=self.pinf.sch.fmt_x_ticks)
+                                      fmt=fmtdata)
         ax.xaxis.set_major_formatter(autofmt)
 
     def calcrows(self, strategy):

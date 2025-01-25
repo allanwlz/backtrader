@@ -23,6 +23,7 @@ from __future__ import (absolute_import, division, print_function,
 
 
 import backtrader as bt
+import pandas as pd
 
 
 class PositionsValue(bt.Analyzer):
@@ -83,3 +84,26 @@ class PositionsValue(bt.Analyzer):
             self.rets[self.strategy.datetime.date()] = pvals
         else:
             self.rets[self.strategy.datetime.datetime()] = pvals
+
+
+# 持仓分析器
+class PositionAnalyzer(bt.Analyzer):
+    def start(self):
+        self.pos = []
+    def next(self):
+        cash = self.strategy.broker.get_cash()
+        date_time = self.strategy.data.datetime.date()
+        # 记录持仓和现金信息
+        d = {'cash': cash}
+        for data in self.strategy.datas:
+            if data._name and len(data.close) > 0:
+                d[data._name] = self.strategy.broker.getvalue([data])
+        self.pos.append((date_time, d))
+        
+    def get_analysis(self):
+        position = pd.DataFrame([i[1] for i in self.pos], index=[i[0] for i in self.pos])
+        position.index.name = 'date'
+        position = position.reset_index()
+        position = position.drop_duplicates(subset='date', keep='first')
+        position = position.set_index('date')
+        return position

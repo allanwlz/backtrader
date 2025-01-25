@@ -45,24 +45,27 @@ class Trades(Observer):
     '''
     _stclock = True
 
-    lines = ('pnlplus', 'pnlminus')
+    lines = ('pnlplus', 'pnlminus', 'cumulative')
 
     params = dict(pnlcomm=True)
 
     plotinfo = dict(plot=True, subplot=True,
-                    plotname='Trades - Net Profit/Loss',
-                    plotymargin=0.10,
-                    plothlines=[0.0])
-
+                    plotname='Trades - Net Profit/Loss ')
+    
     plotlines = dict(
-        pnlplus=dict(_name='Positive',
-                     ls='', marker='o', color='blue',
-                     markersize=8.0, fillstyle='full'),
-        pnlminus=dict(_name='Negative',
-                      ls='', marker='o', color='red',
-                      markersize=8.0, fillstyle='full')
+        pnlplus=dict(_name='Positive',  width=3.0,
+                     _method='bar', color='red'),
+        pnlminus=dict(_name='Negative',  width=3.0,
+                      _method='bar', color='green'),
+        cumulative=dict(_name='Cumulative', color='blue')
     )
-
+    
+    # pnlplus=dict(_name='Positive',
+    #              ls='', marker='o', color='blue',
+    #              markersize=8.0, fillstyle='full'),
+    # pnlminus=dict(_name='Negative',
+    #               ls='', marker='o', color='red',
+    #               markersize=8.0, fillstyle='full'),
     def __init__(self):
 
         self.trades = 0
@@ -88,6 +91,11 @@ class Trades(Observer):
         self.trades_length_max = 0
         self.trades_length_min = 0
 
+        self.cumulative_pnl = 0.0
+        self.stockname = self.datas[0]._name
+        self.plotinfo.plotmaster = self.datas[0]
+        self.plotinfo.plotname += self.stockname
+
     def next(self):
         for trade in self._owner._tradespending:
             if trade.data not in self.ddatas:
@@ -102,8 +110,11 @@ class Trades(Observer):
                 self.lines.pnlplus[0] = pnl
             else:
                 self.lines.pnlminus[0] = pnl
+                
+            self.cumulative_pnl += pnl
+        self.lines.cumulative[0] = self.cumulative_pnl
 
-
+        
 class MetaDataTrades(Observer.__class__):
     def donew(cls, *args, **kwargs):
         _obj, args, kwargs = super(MetaDataTrades, cls).donew(*args, **kwargs)

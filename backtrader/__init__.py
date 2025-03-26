@@ -81,6 +81,7 @@ from . import signals as signals
 from . import sizers as sizers
 from . import stores as stores
 from . import brokers as brokers
+from . import plot as plot
 from . import timer as timer
 
 from . import talib as talib
